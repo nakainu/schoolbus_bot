@@ -16,23 +16,45 @@ function doPost(e) {
 
   if (event.type == 'message') {
     var userMessage = event.message.text;
+    var week = nowWeek();
 
-    if (userMessage == 'みなみ野発') {
-      var replyMessage = getSheetMinaminoCanpus(userMessage);
+    if (week == 'Sun') {
+      var replyMessage = "歩け";
 
-    } else if (userMessage == '八王子発') {
-      var replyMessage = getSheetHachiojiCanpus(userMessage);
+    }else if (week == 'Sat') {
 
-    } else if (userMessage == 'キャンパス発(みなみ野行)') {
-      var replyMessage = getSheetCanpusMinamino(userMessage);
+      if (userMessage == 'みなみ野発') {
+        var replyMessage = getSheetSatMinaminoCanpus(userMessage);
 
-    } else if (userMessage == 'キャンパス発(八王子行)') {
-      var replyMessage = getSheetCanpusHachioji(userMessage);
+      } else if (userMessage == '八王子発') {
+        var replyMessage = getSheetSatHachiojiCanpus(userMessage);
 
+      } else if (userMessage == 'キャンパス発(みなみ野行)') {
+        var replyMessage = getSheetSatCanpusMinamino(userMessage);
+
+      } else if (userMessage == 'キャンパス発(八王子行)') {
+        var replyMessage = getSheetSatCanpusHachioji(userMessage);
+
+      } else {
+        var replyMessage = userMessage;
+      }
     } else {
-      var replyMessage = userMessage;
-    }
+      if (userMessage == 'みなみ野発') {
+        var replyMessage = getSheetMinaminoCanpus(userMessage);
 
+      } else if (userMessage == '八王子発') {
+        var replyMessage = getSheetHachiojiCanpus(userMessage);
+
+      } else if (userMessage == 'キャンパス発(みなみ野行)') {
+        var replyMessage = getSheetCanpusMinamino(userMessage);
+
+      } else if (userMessage == 'キャンパス発(八王子行)') {
+        var replyMessage = getSheetCanpusHachioji(userMessage);
+
+      } else {
+        var replyMessage = userMessage;
+      }
+    }
     var url = 'https://api.line.me/v2/bot/message/reply';
 
     UrlFetchApp.fetch(url, {
@@ -117,6 +139,55 @@ function getSheetCanpusMinamino(mes) {
   return '歩け';
 }
 
+// 土曜みなみ野発のシートを取得
+function getSheetSatMinaminoCanpus(mes) {
+  var nt = nowTime();
+  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = spreadsheet.getSheetByName("土曜みなみ野");
+
+  var range = sheet.getRange(1, 1, sheet.getLastRow(), sheet.getLastColumn());
+
+  var data = range.getValues();
+
+  for (var i = 1; i < data.length; i++) {
+
+    var hh = data[i][1].slice(0, 2);
+    var mm = data[i][1].slice(3, 5);
+
+    var dif = 60 * (nt.HH - Number(hh)) + (nt.MM - Number(mm));
+
+    if (dif < 0) {
+      return data[i][1];
+    }
+  }
+  return '歩け';
+}
+
+// 土曜キャンパス発(みなみ野行)のシートを取得
+function getSheetSatCanpusMinamino(mes) {
+  var nt = nowTime();
+  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = spreadsheet.getSheetByName("土曜みなみ野");
+
+  var range = sheet.getRange(1, 1, sheet.getLastRow(), sheet.getLastColumn());
+
+  var data = range.getValues();
+
+  for (var i = 1; i < data.length; i++) {
+
+    var hh = data[i][0].slice(0, 2);
+    var mm = data[i][0].slice(3, 5);
+
+    var dif = 60 * (nt.HH - Number(hh)) + (nt.MM - Number(mm));
+
+    if (dif < 0) {
+      return data[i][0];
+    }
+  }
+  return '歩け';
+}
+
+
 // 八王子発のシートを取得
 function getSheetHachiojiCanpus(mes) {
   var nt = nowTime();
@@ -165,6 +236,55 @@ function getSheetCanpusHachioji(mes) {
   return '歩け';
 }
 
+// 土曜八王子発のシートを取得
+function getSheetSatHachiojiCanpus(mes) {
+  var nt = nowTime();
+  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = spreadsheet.getSheetByName("土曜八王子");
+
+  var range = sheet.getRange(1, 1, sheet.getLastRow(), sheet.getLastColumn());
+
+  var data = range.getValues();
+
+  for (var i = 1; i < data.length; i++) {
+
+    var hh = data[i][1].slice(0, 2);
+    var mm = data[i][1].slice(3, 5);
+
+    var dif = 60 * (nt.HH - Number(hh)) + (nt.MM - Number(mm));
+
+    if (dif < 0) {
+      return data[i][1];
+    }
+  }
+  return '歩け';
+}
+
+// 土曜キャンパス発(八王子行）のシートを取得
+function getSheetSatCanpusHachioji(mes) {
+  var nt = nowTime();
+  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = spreadsheet.getSheetByName("土曜八王子");
+
+  var range = sheet.getRange(1, 1, sheet.getLastRow(), sheet.getLastColumn());
+
+  var data = range.getValues();
+
+  for (var i = 1; i < data.length; i++) {
+
+    var hh = data[i][0].slice(0, 2);
+    var mm = data[i][0].slice(3, 5);
+
+    var dif = 60 * (nt.HH - Number(hh)) + (nt.MM - Number(mm));
+
+    if (dif < 0) {
+      return data[i][0];
+    }
+  }
+  return '歩け';
+}
+
+
 // 今の時間
 function nowTime() {
   var d = new Date();
@@ -176,4 +296,13 @@ function nowTime() {
     MM: mm
   }
   return nowtime;
+}
+
+// 曜日を得る
+function　 nowWeek() {
+  var wChars = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  var d = new Date();
+  var wDay = d.getDay();
+
+  return wChars[wDay];
 }
