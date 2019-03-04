@@ -153,13 +153,13 @@ function getSheetCanpusHachioji(mes) {
 
   for (var i = 1; i < data.length; i++) {
 
-    var hh = data[i][1].slice(0, 2);
-    var mm = data[i][1].slice(3, 5);
+    var hh = data[i][0].slice(0, 2);
+    var mm = data[i][0].slice(3, 5);
 
     var dif = 60 * (nt.HH - Number(hh)) + (nt.MM - Number(mm));
 
     if (dif < 0) {
-      return data[i][1];
+      return data[i][0];
     }
   }
   return '歩け';
