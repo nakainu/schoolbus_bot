@@ -1,4 +1,5 @@
 var CHANNEL_ACCESS_TOKEN = 'ChannelAccessToken'; // Channel_access_tokenを登録
+var TEST = false;
 
 function doPost(e) {
   var event = JSON.parse(e.postData.contents).events[0];
@@ -38,7 +39,7 @@ function doPost(e) {
       } else {
         var replyMessage = userMessage;
       }
-      
+
     } else {
       if (userMessage == 'みなみ野発') {
         var replyMessage = getSheetMinaminoCanpus(userMessage);
@@ -54,7 +55,7 @@ function doPost(e) {
 
       } else {
         var replyMessage = userMessage;
-        
+
       }
     }
     var url = 'https://api.line.me/v2/bot/message/reply';
@@ -96,6 +97,12 @@ function getUserProfile(userId) {
 // みなみ野発のシートを取得
 function getSheetMinaminoCanpus(mes) {
   var nt = nowTime();
+  if (TEST) {
+    nt = {}
+    nt.HH = '';
+    nt.MM = '';
+  }
+  Logger.log(nt);
   var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = spreadsheet.getSheetByName("みなみ野");
 
@@ -111,13 +118,20 @@ function getSheetMinaminoCanpus(mes) {
     var dif = 60 * (nt.HH - Number(hh)) + (nt.MM - Number(mm));
 
     if (dif < 0) {
-      var str = 'みなみ野発\n'
-      str += data[i][1] + '\n';
-      str += data[i + 1][1] + '\n';
-      str += data[i + 2][1];
+      var str = 'みなみ野発\n';
+      try {
+        str += data[i][1] + '\n';
+        str += data[i + 1][1] + '\n';
+        str += data[i + 2][1];
+      } catch (e) {
+        str += '終了';
+      }
+      Logger.log('時間: ' + str);
       return str;
+
     }
   }
+  Logger.log('str: ' + str);
   return '歩け';
 }
 
@@ -139,10 +153,14 @@ function getSheetCanpusMinamino(mes) {
     var dif = 60 * (nt.HH - Number(hh)) + (nt.MM - Number(mm));
 
     if (dif < 0) {
-      var str = 'キャンパス発(みなみ野行)\n'
-      str += data[i][0] + '\n';
-      str += data[i + 1][0] + '\n';
-      str += data[i + 2][0];
+      var str = 'キャンパス発(みなみ野行)\n';
+      try {
+        str += data[i][0] + '\n';
+        str += data[i + 1][0] + '\n';
+        str += data[i + 2][0];
+      } catch (e) {
+        str += '終了';
+      }
       return str;
     }
   }
@@ -167,10 +185,14 @@ function getSheetSatMinaminoCanpus(mes) {
     var dif = 60 * (nt.HH - Number(hh)) + (nt.MM - Number(mm));
 
     if (dif < 0) {
-      var str = 'みなみ野発(土曜日)\n'
-      str += data[i][1] + '\n';
-      str += data[i + 1][1] + '\n';
-      str += data[i + 2][1];
+      var str = 'みなみ野発(土曜日)\n';
+      try {
+        str += data[i][1] + '\n';
+        str += data[i + 1][1] + '\n';
+        str += data[i + 2][1];
+      } catch (e) {
+        str += '終了';
+      }
       return str;
     }
   }
@@ -195,10 +217,14 @@ function getSheetSatCanpusMinamino(mes) {
     var dif = 60 * (nt.HH - Number(hh)) + (nt.MM - Number(mm));
 
     if (dif < 0) {
-      var str = 'キャンパス発(みなみ野行)(土曜日)\n'
-      str += data[i][0] + '\n';
-      str += data[i + 1][0] + '\n';
-      str += data[i + 2][0];
+      var str = 'キャンパス発(みなみ野行)(土曜日)\n';
+      try {
+        str += data[i][0] + '\n';
+        str += data[i + 1][0] + '\n';
+        str += data[i + 2][0];
+      } catch (e) {
+        str += '終了';
+      }
       return str;
     }
   }
@@ -224,10 +250,14 @@ function getSheetHachiojiCanpus(mes) {
     var dif = 60 * (nt.HH - Number(hh)) + (nt.MM - Number(mm));
 
     if (dif < 0) {
-      var str = '八王子発\n'
-      str += data[i][1] + '\n';
-      str += data[i + 1][1] + '\n';
-      str += data[i + 2][1];
+      var str = '八王子発\n';
+      try {
+        str += data[i][1] + '\n';
+        str += data[i + 1][1] + '\n';
+        str += data[i + 2][1];
+      } catch (e) {
+        str += '終了';
+      }
       return str;
     }
   }
@@ -252,10 +282,14 @@ function getSheetCanpusHachioji(mes) {
     var dif = 60 * (nt.HH - Number(hh)) + (nt.MM - Number(mm));
 
     if (dif < 0) {
-      var str = 'キャンパス発(八王子行)\n'
-      str += data[i][0] + '\n';
-      str += data[i + 1][0] + '\n';
-      str += data[i + 2][0];
+      var str = 'キャンパス発(八王子行)\n';
+      try {
+        str += data[i][0] + '\n';
+        str += data[i + 1][0] + '\n';
+        str += data[i + 2][0];
+      } catch (e) {
+        str += '終了';
+      }
       return str;;
     }
   }
@@ -280,10 +314,14 @@ function getSheetSatHachiojiCanpus(mes) {
     var dif = 60 * (nt.HH - Number(hh)) + (nt.MM - Number(mm));
 
     if (dif < 0) {
-      var str = '八王子発(土曜日)\n'
-      str += data[i][1] + '\n';
-      str += data[i + 1][1] + '\n';
-      str += data[i + 2][1];
+      var str = '八王子発(土曜日)\n';
+      try {
+        str += data[i][1] + '\n';
+        str += data[i + 1][1] + '\n';
+        str += data[i + 2][1];
+      } catch (e) {
+        str += '終了';
+      }
       return str;
     }
   }
@@ -308,10 +346,14 @@ function getSheetSatCanpusHachioji(mes) {
     var dif = 60 * (nt.HH - Number(hh)) + (nt.MM - Number(mm));
 
     if (dif < 0) {
-      var str = 'キャンパス発(八王子行)(土曜日)\n'
-      str += data[i][0] + '\n';
-      str += data[i + 1][0] + '\n';
-      str += data[i + 2][0];
+      var str = 'キャンパス発(八王子行)(土曜日)\n';
+      try {
+        str += data[i][0] + '\n';
+        str += data[i + 1][0] + '\n';
+        str += data[i + 2][0];
+      } catch (e) {
+        str += '終了';
+      }
       return str;
     }
   }
