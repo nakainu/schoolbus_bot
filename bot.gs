@@ -1,87 +1,63 @@
-var CHANNEL_ACCESS_TOKEN = 'ChannelAccessToken'; // Channel_access_tokenを登録
+var CHANNEL_ACCESS_TOKEN = 'pz/ocBiPe6mu0DxtEaU56ThWvV7q1RCxWnnFwaKLtIalzdXesKAVDyiogGiMSA+r1tHwRN+S8ipMtRI9dJNUCPhM70/RERn1pSPwpVyFr9aibO747U2yysEtH964pznCXKTBVFh15BXnl+tMfHveuQdB04t89/1O/w1cDnyilFU='; // Channel_access_tokenを登録
 var TEST = false;
 
 function doPost(e) {
   var event = JSON.parse(e.postData.contents).events[0];
   var replyToken = event.replyToken;
-
+  
   if (typeof replyToken === 'undefined') {
     return; // エラー処理
   }
   var userId = event.source.userId;
   var nickname = getUserProfile(userId);
-
+  
   if (event.type == 'follow') {
     // ユーザーにbotがフォローされた場合に起きる処理
   }
-
+  
   if (event.type == 'message') {
     var userMessage = event.message.text;
-    var week = nowWeek();
-
-    if (week == 'Sun') {
-      var replyMessage = '歩け';
-
-    } else if (week == 'Sat') {
-
-      if (userMessage == 'みなみ野発') {
-        var replyMessage = getSheetSatMinaminoCanpus(userMessage);
-
-      } else if (userMessage == '八王子発') {
-        var replyMessage = getSheetSatHachiojiCanpus(userMessage);
-
-      } else if (userMessage == 'キャンパス発(みなみ野行)') {
-        var replyMessage = getSheetSatCanpusMinamino(userMessage);
-
-      } else if (userMessage == 'キャンパス発(八王子行)') {
-        var replyMessage = getSheetSatCanpusHachioji(userMessage);
-
-      } else {
-        var replyMessage = userMessage;
-      }
+    
+    if (userMessage == 'みなみ野発') {
+      var replyMessage = getMinaminoCanpus(userMessage);
+      
+    } else if (userMessage == '八王子発') {
+      var replyMessage = getHachiojiCanpus(userMessage);
+      
+    } else if (userMessage == 'キャンパス発(みなみ野行)') {
+      var replyMessage = getCanpusMinamino(userMessage);
+      
+    } else if (userMessage == 'キャンパス発(八王子行)') {
+      var replyMessage = getCanpusHachioji(userMessage);
 
     } else {
-      if (userMessage == 'みなみ野発') {
-        var replyMessage = getSheetMinaminoCanpus(userMessage);
-
-      } else if (userMessage == '八王子発') {
-        var replyMessage = getSheetHachiojiCanpus(userMessage);
-
-      } else if (userMessage == 'キャンパス発(みなみ野行)') {
-        var replyMessage = getSheetCanpusMinamino(userMessage);
-
-      } else if (userMessage == 'キャンパス発(八王子行)') {
-        var replyMessage = getSheetCanpusHachioji(userMessage);
-
-      } else {
-        var replyMessage = userMessage;
-
-      }
+      var replyMessage = userMessage;
     }
-    var url = 'https://api.line.me/v2/bot/message/reply';
-
-    UrlFetchApp.fetch(url, {
-      'headers': {
-        'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': 'Bearer ' + CHANNEL_ACCESS_TOKEN,
-      },
-      'method': 'post',
-      'payload': JSON.stringify({
-        'replyToken': replyToken,
-        'messages': [{
-          'type': 'text',
-          'text': replyMessage,
-        }],
-      }),
-    });
-    return ContentService.createTextOutput(
-      JSON.stringify({
-        'content': 'post ok'
-      })
-    ).setMimeType(ContentService.MimeType.JSON);
   }
-
+  
+  var url = 'https://api.line.me/v2/bot/message/reply';
+  
+  UrlFetchApp.fetch(url, {
+    'headers': {
+      'Content-Type': 'application/json; charset=UTF-8',
+      'Authorization': 'Bearer ' + CHANNEL_ACCESS_TOKEN,
+    },
+    'method': 'post',
+    'payload': JSON.stringify({
+      'replyToken': replyToken,
+      'messages': [{
+        'type': 'text',
+        'text': replyMessage,
+      }],
+    }),
+  });
+  return ContentService.createTextOutput(
+    JSON.stringify({
+      'content': 'post ok'
+    })
+  ).setMimeType(ContentService.MimeType.JSON);
 }
+
 
 // profileを取得してくる関数
 function getUserProfile(userId) {
@@ -94,317 +70,96 @@ function getUserProfile(userId) {
   return JSON.parse(userProfile).displayName;
 }
 
-// みなみ野発のシートを取得
-function getSheetMinaminoCanpus(mes) {
 
-  var nt = nowTime();
-  if (TEST) {
-    nt = {}
-    nt.HH = '16';
-    nt.MM = '20';
+// 日時のformat
+var formatDate = function (date, format) {
+  if (!format) format = 'YYYY-MM-DD hh:mm:ss.SSS';
+  format = format.replace(/YYYY/g, date.getFullYear());
+  format = format.replace(/MM/g, ('0' + (date.getMonth() + 1)).slice(-2));
+  format = format.replace(/DD/g, ('0' + date.getDate()).slice(-2));
+  format = format.replace(/hh/g, ('0' + date.getHours()).slice(-2));
+  format = format.replace(/mm/g, ('0' + date.getMinutes()).slice(-2));
+  format = format.replace(/ss/g, ('0' + date.getSeconds()).slice(-2));
+  if (format.match(/S/g)) {
+    var milliSeconds = ('00' + date.getMilliseconds()).slice(-3);
+    var length = format.match(/S/g).length;
+    for (var i = 0; i < length; i++) format = format.replace(/S/, milliSeconds.substring(i, i + 1));
   }
-  // Logger.log(nt);
+  return format;
+};
 
-  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = spreadsheet.getSheetByName("みなみ野");
-  var range = sheet.getRange(1, 1, sheet.getLastRow(), sheet.getLastColumn());
-  var data = range.getValues();
 
-  for (var i = 1; i < data.length; i++) {
-
-    var hh = data[i][1].slice(0, 2);
-    var mm = data[i][1].slice(3, 5);
-    var dif = 60 * (nt.HH - Number(hh)) + (nt.MM - Number(mm));
-    // Logger.log(dif);
-
-    if (dif < 0) {
-      var str = 'みなみ野発\n';
-      var shuttle_arr = ['09:21', '17:00', '19:02'];
-      try {
-        str += data[i][1] + '\n';
-        str += data[i + 1][1] + '\n';
-        str += data[i + 2][1];
-
-        if (str.indexOf(shuttle_arr)) {
-          // Logger.log('含まれている');
-          str = str.replace(shuttle_arr[0], 'シャトル運行(約3~5分間隔)');
-          str = str.replace(shuttle_arr[1], 'シャトル運行(約5~10分間隔)');
-          str = str.replace(shuttle_arr[2], 'シャトル運行(約5~10分間隔)');
-        }
-
-      } catch (e) {
-        str += '終了';
-      }
-      Logger.log(str);
-      return str;
+// みなみ野発の時刻を取得
+function getMinaminoCanpus(mes) {
+  var url = "https://bus.t-lab.cs.teu.ac.jp/api/v1/timetables?from=1";
+  var json = UrlFetchApp.fetch(url).getContentText();
+  var jsonData = JSON.parse(json);
+  var str;
+  if (jsonData.timetables.length < 1) {
+    str = '歩け';
+  } else {
+    str = 'みなみ野発';
+    for (var i=0; i<jsonData.timetables.length; i++) {
+      str += '\n' + formatDate(new Date(jsonData.timetables[i].departure_time), 'hh:mm');
     }
   }
-  return '歩け';
+  Logger.log(str);
+  return str;
 }
 
-// キャンパス発(みなみ野行)のシートを取得
-function getSheetCanpusMinamino(mes) {
-  var nt = nowTime();
-  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = spreadsheet.getSheetByName("みなみ野");
-  var range = sheet.getRange(1, 1, sheet.getLastRow(), sheet.getLastColumn());
-  var data = range.getValues();
 
-  for (var i = 1; i < data.length; i++) {
-
-    var hh = data[i][0].slice(0, 2);
-    var mm = data[i][0].slice(3, 5);
-    var dif = 60 * (nt.HH - Number(hh)) + (nt.MM - Number(mm));
-
-    if (dif < 0) {
-      var str = 'キャンパス発(みなみ野行)\n';
-      var shuttle_arr = ['09:14', '16:53', '18:55'];
-      try {
-        str += data[i][0] + '\n';
-        str += data[i + 1][0] + '\n';
-        str += data[i + 2][0];
-
-        if (str.indexOf(shuttle_arr)) {
-          // Logger.log('含まれている');
-          str = str.replace(shuttle_arr[0], 'シャトル運行(約3~5分間隔)');
-          str = str.replace(shuttle_arr[1], 'シャトル運行(約5~10分間隔)');
-          str = str.replace(shuttle_arr[2], 'シャトル運行(約5~10分間隔)');
-        }
-      } catch (e) {
-        str += '終了';
-      }
-      // Logger.log(str);
-      return str;
+// キャンパス発(みなみ野行)の時刻を取得
+function getCanpusMinamino(mes) {
+  var url = "https://bus.t-lab.cs.teu.ac.jp/api/v1/timetables?from=2";
+  var json = UrlFetchApp.fetch(url).getContentText();
+  var jsonData = JSON.parse(json);
+  var str;
+  if (jsonData.timetables.length < 1) {
+    str = '歩け';
+  } else {
+    str = 'キャンパス発(みなみ野行)';
+    for (var i=0; i<jsonData.timetables.length; i++) {
+      str += '\n' + formatDate(new Date(jsonData.timetables[i].departure_time), 'hh:mm');
     }
   }
-  return '歩け';
+  Logger.log(str);
+  return str;
 }
 
-// 土曜みなみ野発のシートを取得
-function getSheetSatMinaminoCanpus(mes) {
-  var nt = nowTime();
-  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = spreadsheet.getSheetByName("土曜みなみ野");
 
-  var range = sheet.getRange(1, 1, sheet.getLastRow(), sheet.getLastColumn());
-
-  var data = range.getValues();
-
-  for (var i = 1; i < data.length; i++) {
-
-    var hh = data[i][1].slice(0, 2);
-    var mm = data[i][1].slice(3, 5);
-
-    var dif = 60 * (nt.HH - Number(hh)) + (nt.MM - Number(mm));
-
-    if (dif < 0) {
-      var str = 'みなみ野発(土曜日)\n';
-      try {
-        str += data[i][1] + '\n';
-        str += data[i + 1][1] + '\n';
-        str += data[i + 2][1];
-      } catch (e) {
-        str += '終了';
-      }
-      return str;
+// 八王子発の時刻を取得
+function getHachiojiCanpus(mes) {
+  var url = "https://bus.t-lab.cs.teu.ac.jp/api/v1/timetables?from=3";
+  var json = UrlFetchApp.fetch(url).getContentText();
+  var jsonData = JSON.parse(json);
+  var str;
+  if (jsonData.timetables.length < 1) {
+    str = '歩け';
+  } else {
+    str = '八王子発';
+    for (var i=0; i<jsonData.timetables.length; i++) {
+      str += '\n' + formatDate(new Date(jsonData.timetables[i].departure_time), 'hh:mm');
     }
   }
-  return '歩け';
+  Logger.log(str);
+  return str;
 }
 
-// 土曜キャンパス発(みなみ野行)のシートを取得
-function getSheetSatCanpusMinamino(mes) {
-  var nt = nowTime();
-  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = spreadsheet.getSheetByName("土曜みなみ野");
-  var range = sheet.getRange(1, 1, sheet.getLastRow(), sheet.getLastColumn());
-  var data = range.getValues();
 
-  for (var i = 1; i < data.length; i++) {
-    var hh = data[i][0].slice(0, 2);
-    var mm = data[i][0].slice(3, 5);
-    var dif = 60 * (nt.HH - Number(hh)) + (nt.MM - Number(mm));
-
-    if (dif < 0) {
-      var str = 'キャンパス発(みなみ野行)(土曜日)\n';
-      try {
-        str += data[i][0] + '\n';
-        str += data[i + 1][0] + '\n';
-        str += data[i + 2][0];
-      } catch (e) {
-        str += '終了';
-      }
-      return str;
+// キャンパス発(八王子行）の時刻を取得
+function getCanpusHachioji(mes) {
+  var url = "https://bus.t-lab.cs.teu.ac.jp/api/v1/timetables?from=4";
+  var json = UrlFetchApp.fetch(url).getContentText();
+  var jsonData = JSON.parse(json);
+  var str;
+  if (jsonData.timetables.length < 1) {
+    str = '歩け';
+  } else {
+    str = 'キャンパス発(八王子行)';
+    for (var i=0; i<jsonData.timetables.length; i++) {
+      str += '\n' + formatDate(new Date(jsonData.timetables[i].departure_time), 'hh:mm');
     }
   }
-  return '歩け';
-}
-
-
-// 八王子発のシートを取得
-function getSheetHachiojiCanpus(mes) {
-  var nt = nowTime();
-  if (TEST) {
-    nt = {}
-    nt.HH = '07';
-    nt.MM = '59';
-  }
-  // Logger.log(nt);
-
-  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = spreadsheet.getSheetByName("八王子");
-  var range = sheet.getRange(1, 1, sheet.getLastRow(), sheet.getLastColumn());
-  var data = range.getValues();
-
-  for (var i = 1; i < data.length; i++) {
-    var hh = data[i][1].slice(0, 2);
-    var mm = data[i][1].slice(3, 5);
-    var dif = 60 * (nt.HH - Number(hh)) + (nt.MM - Number(mm));
-
-    // Logger.log(dif);
-
-    if (dif < 0) {
-      var str = '八王子発\n';
-      var shuttle_arr = ['09:19', '17:05', '18:00', '19:05'];
-      try {
-        str += data[i][1] + '\n';
-        str += data[i + 1][1] + '\n';
-        str += data[i + 2][1];
-
-        if (str.indexOf(shuttle_arr)) {
-          // Logger.log('含まれている');
-          str = str.replace(shuttle_arr[0], 'シャトル運行(約3~5分間隔)');
-          str = str.replace(shuttle_arr[1], 'シャトル運行(約5~10分間隔)');
-          str = str.replace(shuttle_arr[2], 'シャトル運行(約5~10分間隔)');
-          str = str.replace(shuttle_arr[3], 'シャトル運行(約5~10分間隔)');
-        }
-      } catch (e) {
-        str += '終了';
-      }
-      // Logger.log(str);
-      return str;
-    }
-  }
-  return '歩け';
-}
-
-// キャンパス発(八王子行）のシートを取得
-function getSheetCanpusHachioji(mes) {
-  var nt = nowTime();
-  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = spreadsheet.getSheetByName("八王子");
-  var range = sheet.getRange(1, 1, sheet.getLastRow(), sheet.getLastColumn());
-  var data = range.getValues();
-
-  for (var i = 1; i < data.length; i++) {
-    var hh = data[i][0].slice(0, 2);
-    var mm = data[i][0].slice(3, 5);
-    var dif = 60 * (nt.HH - Number(hh)) + (nt.MM - Number(mm));
-
-    // Logger.log(dif);
-
-    if (dif < 0) {
-      var str = 'キャンパス発(八王子行)\n';
-      var shuttle_arr = ['09:07', '16:54', '17:49', '18:54'];
-      try {
-        str += data[i][0] + '\n';
-        str += data[i + 1][0] + '\n';
-        str += data[i + 2][0];
-
-        if (str.indexOf(shuttle_arr)) {
-          // Logger.log('含まれている');
-          str = str.replace(shuttle_arr[0], 'シャトル運行(約3~5分間隔)');
-          str = str.replace(shuttle_arr[1], 'シャトル運行(約5~10分間隔)');
-          str = str.replace(shuttle_arr[2], 'シャトル運行(約5~10分間隔)');
-          str = str.replace(shuttle_arr[3], 'シャトル運行(約5~10分間隔)');
-        }
-      } catch (e) {
-        str += '終了';
-      }
-      // Logger.log(str);
-      return str;;
-    }
-  }
-  return '歩け';
-}
-
-// 土曜八王子発のシートを取得
-function getSheetSatHachiojiCanpus(mes) {
-  var nt = nowTime();
-  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = spreadsheet.getSheetByName("土曜八王子");
-  var range = sheet.getRange(1, 1, sheet.getLastRow(), sheet.getLastColumn());
-  var data = range.getValues();
-
-  for (var i = 1; i < data.length; i++) {
-    var hh = data[i][1].slice(0, 2);
-    var mm = data[i][1].slice(3, 5);
-    var dif = 60 * (nt.HH - Number(hh)) + (nt.MM - Number(mm));
-
-    if (dif < 0) {
-      var str = '八王子発(土曜日)\n';
-      try {
-        str += data[i][1] + '\n';
-        str += data[i + 1][1] + '\n';
-        str += data[i + 2][1];
-
-      } catch (e) {
-        str += '終了';
-      }
-      return str;
-    }
-  }
-  return '歩け';
-}
-
-// 土曜キャンパス発(八王子行）のシートを取得
-function getSheetSatCanpusHachioji(mes) {
-  var nt = nowTime();
-  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = spreadsheet.getSheetByName("土曜八王子");
-  var range = sheet.getRange(1, 1, sheet.getLastRow(), sheet.getLastColumn());
-  var data = range.getValues();
-
-  for (var i = 1; i < data.length; i++) {
-    var hh = data[i][0].slice(0, 2);
-    var mm = data[i][0].slice(3, 5);
-    var dif = 60 * (nt.HH - Number(hh)) + (nt.MM - Number(mm));
-
-    if (dif < 0) {
-      var str = 'キャンパス発(八王子行)(土曜日)\n';
-      try {
-        str += data[i][0] + '\n';
-        str += data[i + 1][0] + '\n';
-        str += data[i + 2][0];
-
-      } catch (e) {
-        str += '終了';
-      }
-      return str;
-    }
-  }
-  return '歩け';
-}
-
-
-// 今の時間
-function nowTime() {
-  var d = new Date();
-  var hh = d.getHours();
-  var mm = d.getMinutes();
-
-  var nowtime = {
-    HH: hh,
-    MM: mm
-  }
-  return nowtime;
-}
-
-// 曜日を得る
-function　 nowWeek() {
-  var wChars = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  var d = new Date();
-  var wDay = d.getDay();
-
-  return wChars[wDay];
+  Logger.log(str);
+  return str;
 }
