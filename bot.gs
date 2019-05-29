@@ -1,4 +1,4 @@
-var CHANNEL_ACCESS_TOKEN = 'pz/ocBiPe6mu0DxtEaU56ThWvV7q1RCxWnnFwaKLtIalzdXesKAVDyiogGiMSA+r1tHwRN+S8ipMtRI9dJNUCPhM70/RERn1pSPwpVyFr9aibO747U2yysEtH964pznCXKTBVFh15BXnl+tMfHveuQdB04t89/1O/w1cDnyilFU='; // Channel_access_tokenを登録
+var CHANNEL_ACCESS_TOKEN = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxx'; // Channel_access_tokenを登録
 var TEST = false;
 
 function doPost(e) {
